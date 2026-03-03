@@ -10,6 +10,28 @@ npm install && npm start
 # Server runs on http://localhost:9377
 ```
 
+## CLI Automation
+
+> For the complete CLI command reference, see [CLI](README.md#cli) in the main README.
+
+For terminal-based automation, use the `camofox` CLI:
+
+```bash
+# Open and interact
+camofox open https://example.com
+camofox snapshot
+camofox click e5
+
+# Safe credential injection (credentials never in stdout)
+camofox auth save profile-name
+camofox auth load profile-name --inject --username-ref e5 --password-ref e12
+
+# Pipeline scripting
+camofox run automation-script.txt
+```
+
+> The CLI auto-starts the server. Output format can be set with `--format json` for structured parsing.
+
 ## Core Workflow
 
 1. **Create a tab** → Get `tabId`
@@ -40,7 +62,7 @@ POST /tabs/:tabId/navigate
 GET /tabs/:tabId/snapshot?userId=agent1
 ```
 Returns accessibility tree with refs:
-```
+```text
 [heading] Example Domain
 [paragraph] This domain is for use in examples.
 [link e1] More information...

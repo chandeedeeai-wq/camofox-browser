@@ -4,13 +4,17 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue)](tsconfig.json)
-[![Node](https://img.shields.io/badge/Node-18%2B-green)](package.json)
+[![Node](https://img.shields.io/badge/Node-20%2B-green)](package.json)
+[![npm](https://img.shields.io/npm/v/camofox-browser)](https://www.npmjs.com/package/camofox-browser)
 
 ## Table of Contents
 
 - [Why CamoFox?](#why-camofox)
 - [Features](#features)
 - [Quick Start](#quick-start)
+- [CLI](#cli)
+- [Security](#security)
+- [Usage with AI Agents](#usage-with-ai-agents)
 - [Architecture](#architecture)
 - [API Reference](#api-reference)
 - [Search Macros](#search-macros)
@@ -52,6 +56,9 @@
 - **YouTube Transcript Extraction** — yt-dlp primary pipeline with browser fallback
 - **Snapshot Pagination** — offset-based windowing for large page snapshots
 - **Browser Health Monitoring** — health probe with recovery/degraded state tracking
+- 🖥️ **CLI Mode** — 47+ commands for terminal-based browser automation
+- 🔐 **Auth Vault** — AES-256-GCM encrypted credential storage (LLM-safe)
+- 📜 **Pipeline Scripting** — Execute command scripts from files
 
 ## Quick Start
 
@@ -67,22 +74,23 @@ npm start
 
 ### Using npm (CLI)
 
-This is a **server**, not a browser automation library. Most users should run it from source or Docker.
-
-If you want a minimal CLI wrapper that starts the server (via the package `bin`):
-
 ```bash
 npm install -g camofox-browser
+
+# Start the server
 camofox-browser
+
+# Or use the CLI for browser automation
+camofox open https://example.com
+camofox snapshot
+camofox click e5
 ```
 
-Or one-off:
-
-```bash
-npx camofox-browser
-```
+> See [CLI](#cli) for the complete command reference.
 
 ### Using Docker
+
+> Docker image: `ghcr.io/redf0x1/camofox-browser`
 
 ```bash
 docker build -t camofox-browser .
@@ -94,18 +102,7 @@ docker run -d \
   camofox-browser
 ```
 
-To persist browser profiles (cookies, localStorage, IndexedDB, etc.) across container restarts:
-
-```bash
-docker run -d \
-  --name camofox-browser \
-  -p 9377:9377 \
-  -p 6080:6080 \
-  -v ~/.camofox:/home/node/.camofox \
-  camofox-browser
-```
-
-The volume mount `-v ~/.camofox:/home/node/.camofox` ensures profiles persist across container restarts.
+To persist browser profiles (cookies, localStorage, IndexedDB, etc.) across container restarts, keep the volume mount shown above.
 
 ### Using Docker Compose
 
@@ -134,9 +131,208 @@ curl http://localhost:9377/health
 # {"ok":true,"engine":"camoufox","browserConnected":true}
 ```
 
+## CLI
+
+CamoFox Browser includes a powerful CLI for browser automation directly from the terminal. The CLI auto-starts the server when needed.
+
+### Installation
+
+```bash
+# Global install (recommended)
+npm install -g camofox-browser
+
+# Or use npx (no install needed)
+npx camofox open https://example.com
+```
+
+### Quick Start
+
+```bash
+camofox open https://example.com       # Open a page in anti-detection browser
+camofox snapshot                       # Get accessibility tree with element refs
+camofox click e5                       # Click element [e5]
+camofox type e3 "hello world"         # Type into element [e3]
+camofox screenshot --output page.png   # Save screenshot
+camofox close                          # Close the tab
+```
+
+### Core Commands
+
+```bash
+# Browser lifecycle
+camofox open <url>                     # Open URL in new tab
+camofox close [tabId]                  # Close tab
+camofox navigate <url>                 # Navigate current tab to URL
+
+# Inspection
+camofox snapshot                       # Get accessibility tree with [eN] refs
+camofox screenshot [--output file]     # Take screenshot (saves to file)
+camofox annotate                       # Screenshot + element ref overlay
+camofox get-url                        # Get current page URL
+camofox get-text                       # Get page text content
+camofox get-links                      # Get all links on page
+camofox get-tabs                       # List open tabs
+
+# Interaction
+camofox click <ref>                    # Click element by ref
+camofox type <ref> <text>              # Type text into element
+camofox fill '[e1]="user" [e2]="pw"'  # Fill multiple fields at once
+camofox scroll <direction>             # Scroll up/down/left/right
+camofox select <ref> <value>           # Select dropdown option
+camofox hover <ref>                    # Hover over element
+camofox press <key>                    # Press keyboard key
+camofox drag <from> <to>               # Drag element to target
+
+# Navigation
+camofox go-back                        # Browser back
+camofox go-forward                     # Browser forward
+camofox search "query" --engine google # Search (14 engines supported)
+camofox eval "document.title"          # Execute JavaScript
+camofox wait <selector> [--timeout ms] # Wait for element
+```
+
+### Session Management
+
+```bash
+camofox session save <name>            # Save current browser state
+camofox session load <name>            # Restore browser state
+camofox session list                   # List saved sessions
+camofox session delete <name>          # Delete saved session
+```
+
+### Cookie Management
+
+```bash
+camofox cookie export <file>           # Export cookies to JSON file
+camofox cookie import <file>           # Import cookies from JSON file
+```
+
+### Auth Vault
+
+Securely store credentials locally with AES-256-GCM encryption. Credentials are **never** output to stdout — safe for LLM agent automation.
+
+```bash
+camofox auth save <profile> [--url URL]  # Save credentials (prompts for master password)
+camofox auth load <profile>              # Show profile info (username only)
+camofox auth list                        # List saved profiles (no secrets shown)
+camofox auth delete <profile>            # Delete a profile
+camofox auth change-password <profile>   # Change master password
+
+# Inject credentials into a browser tab (LLM-safe)
+camofox snapshot                         # Get element refs first
+camofox auth load gmail --inject --username-ref e5 --password-ref e12
+```
+
+> **Security:** Master passwords use Argon2id KDF (with PBKDF2 fallback). Vault files are stored with 0600 permissions. The `--inject` flag sends credentials directly to the browser — the LLM agent never sees the password.
+
+### Pipeline Scripting
+
+Execute multiple commands from a file for automation workflows:
+
+```bash
+# Create a script
+cat > login-flow.txt << 'EOF'
+# Login automation script
+open https://example.com/login
+snapshot
+type e3 "username"
+type e5 "password"
+click e7
+wait .dashboard --timeout 5000
+screenshot --output result.png
+close
+EOF
+
+# Run it
+camofox run login-flow.txt
+
+# Continue on errors
+camofox run login-flow.txt --continue-on-error
+
+# Read from stdin
+echo "get-url" | camofox run -
+```
+
+### Server Management
+
+```bash
+camofox server start                   # Start server daemon
+camofox server start --background      # Start in background
+camofox server stop                    # Stop server daemon
+camofox server status                  # Check server status
+```
+
+### Diagnostics
+
+```bash
+camofox health                         # System health report
+camofox version                        # CLI + server version
+camofox info                           # Configuration info
+```
+
+### Global Options
+
+| Flag | Env Var | Description | Default |
+|------|---------|-------------|---------|
+| `--user <id>` | `CAMOFOX_USER` | User/profile ID | `cli-default` |
+| `--port <port>` | `PORT` | Server port | `9377` |
+| `--format <fmt>` | — | Output: `json`, `text`, `plain` | `text` |
+| `-V, --version` | — | Show version | — |
+| `-h, --help` | — | Show help | — |
+
+### Output Formats
+
+```bash
+camofox get-url --format json          # {"url":"https://example.com"}
+camofox get-url --format text          # URL: https://example.com
+camofox get-url --format plain         # https://example.com
+```
+
+> **Tip:** Use `--format json` for programmatic parsing and LLM agent integration.
+
+## Security
+
+### Anti-Detection
+CamoFox uses [Camoufox](https://github.com/daijro/camoufox), a Firefox fork with **C++ level fingerprint spoofing**. Unlike Chromium-based tools, CamoFox passes bot detection on Google, Cloudflare, and other anti-bot services.
+
+### Auth Vault
+- **AES-256-GCM** encryption with **Argon2id** key derivation (PBKDF2 fallback)
+- Credentials **never** appear in stdout (safe for LLM agent pipelines)
+- Vault files stored with `0600` permissions
+- Master password required for all vault operations
+
+### LLM Agent Safety
+- The `--inject` flag sends credentials directly to the browser — the LLM agent orchestrating the CLI never sees raw passwords
+- Output formats are designed for safe parsing without credential exposure
+- Pipeline scripts can reference auth profiles without embedding secrets
+
+## Usage with AI Agents
+
+CamoFox works seamlessly with AI coding agents and LLM-powered automation:
+
+### MCP Integration (Recommended)
+Use [CamoFox MCP](https://github.com/redf0x1/camofox-mcp) for direct integration with Claude, Cursor, Windsurf, and other MCP-compatible agents. See [Used With](#used-with).
+
+### CLI Integration
+AI agents can use the CLI with `--format json` for structured output:
+
+```bash
+camofox open https://example.com       # Open page
+camofox snapshot --format json         # Get structured element tree
+camofox click e5                       # Interact with elements
+camofox auth load gmail --inject --username-ref e5 --password-ref e12  # Safe credential injection
+```
+
+### Pipeline Automation
+Create reusable automation scripts that AI agents can execute:
+
+```bash
+camofox run automation-flow.txt        # Execute multi-step workflow
+```
+
 ## Architecture
 
-```
+```text
 AI Agent (MCP / OpenClaw / REST Client)
     │
     ▼ HTTP REST API (port 9377)
@@ -383,7 +579,7 @@ fly deploy
 
 ### System Requirements
 
-- Node.js 18+ (20+ recommended)
+- Node.js 20+
 - 2GB+ RAM (browser + contexts require significant memory)
 - Linux recommended for production; macOS is fine for development
 
@@ -399,6 +595,13 @@ fly deploy
 
 ```text
 src/
+├── cli/
+│   ├── commands/       # Command modules (core, navigation, interaction, etc.)
+│   ├── vault/          # Auth vault (encryption, storage)
+│   ├── server/         # Server lifecycle management
+│   ├── transport/      # HTTP transport layer
+│   ├── output/         # Output formatting
+│   └── utils/          # Shared utilities
 ├── server.ts           # Express app entry point
 ├── types.ts            # Shared TypeScript interfaces
 ├── routes/

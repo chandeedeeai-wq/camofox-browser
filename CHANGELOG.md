@@ -1,5 +1,34 @@
 # Changelog
 
+## [2.0.0] — 2026-03-03
+
+### ✨ Added
+- **CLI Mode**: 47+ commands for terminal-based browser automation (`camofox` command)
+- **Auth Vault**: AES-256-GCM encrypted credential storage with Argon2id KDF
+	- `auth save/load/list/delete/change-password` commands
+	- Credentials never output to stdout (LLM-safe)
+	- Optional `argon2` dependency with PBKDF2 fallback
+- **Session Management**: Save/load/list/delete browser sessions via CLI
+- **Cookie Management**: Export/import cookies via CLI
+- **Pipeline Scripting**: Execute command scripts from files (`camofox run script.txt`)
+- **Output Formatting**: JSON, text, and plain output formats (`--format`)
+- **Server Management**: Start/stop/status commands for daemon lifecycle
+- **Advanced Commands**: `annotate`, `health`, `version`, `info`
+- **Auto Server Start**: CLI automatically starts server when needed
+- **Search Macros via CLI**: 14 search engines supported (`camofox search "query" --engine google`)
+
+### 🔧 Changed
+- Node.js minimum version updated to >=20 (from >=18)
+- Added `camofox` bin entry alongside existing `camofox-browser`
+- Added `commander` as direct dependency (v14.0.3)
+- Added `argon2` as optional dependency
+
+### 🏗️ Architecture
+- HTTP-only transport with lazy server start (daemon pattern)
+- PID file management at `~/.camofox/`
+- Atomic file writes for session and vault data
+- API fallback pattern for backward compatibility with older server versions
+
 ## [1.9.0] - 2026-03-01
 
 ### Added
