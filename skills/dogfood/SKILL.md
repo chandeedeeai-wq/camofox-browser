@@ -1,3 +1,10 @@
+---
+name: dogfood
+description: QA testing workflow for CamoFox Browser — systematic testing with console capture, error detection, and Playwright tracing
+metadata:
+  internal: true
+---
+
 # Dogfood QA Testing — camofox-browser
 
 > Systematic exploratory testing of web applications using camofox-browser's anti-detection browser automation.

@@ -310,6 +310,41 @@ CamoFox uses [Camoufox](https://github.com/daijro/camoufox), a Firefox fork with
 
 CamoFox works seamlessly with AI coding agents and LLM-powered automation:
 
+### AI Coding Assistants (Recommended)
+
+Add CamoFox skills to your AI coding assistant for full browser automation context:
+
+```bash
+npx skills add redf0x1/camofox-browser
+```
+
+This works with **Claude Code**, **Codex**, **Cursor**, **Gemini CLI**, **GitHub Copilot**, **Goose**, **OpenCode**, **Windsurf**, and [40+ other agents](https://github.com/vercel-labs/skills#supported-agents).
+
+**Available skills:**
+
+| Skill | Focus | Best For |
+|-------|-------|----------|
+| `camofox-browser` | Full coverage (CLI + API + OpenClaw) | Complete reference |
+| `camofox-cli` | CLI-only (50 commands) | Terminal-first workflows |
+
+The installer will prompt you to choose which skills and which agents to configure.
+
+#### Claude Code
+
+```bash
+npx skills add redf0x1/camofox-browser
+# Installs to .claude/skills/camofox-browser/SKILL.md
+```
+
+#### Cursor / GitHub Copilot / Codex
+
+```bash
+npx skills add redf0x1/camofox-browser
+# Installs to .agents/skills/ directory
+```
+
+> **Tip:** Skills are symlinked from the repo, so they stay up to date. Do not manually copy `SKILL.md` files.
+
 ### MCP Integration (Recommended)
 Use [CamoFox MCP](https://github.com/redf0x1/camofox-mcp) for direct integration with Claude, Cursor, Windsurf, and other MCP-compatible agents. See [Used With](#used-with).
 
