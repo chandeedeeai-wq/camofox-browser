@@ -550,9 +550,11 @@ export async function clickTab(tabId: string, tabState: TabState, params: { ref?
 			const locator = await refToLocator(tabState.page, ref, tabState.refs);
 			if (!locator) {
 				const maxRef = tabState.refs.size > 0 ? `e${tabState.refs.size}` : 'none';
-				throw new Error(
+				const err = new Error(
 					`Unknown ref: ${ref} (valid refs: e1-${maxRef}, ${tabState.refs.size} total). Refs reset after navigation - call snapshot first.`,
 				);
+				(err as any).statusCode = 400;
+				throw err;
 			}
 			await doClick(locator, true);
 		} else {
@@ -659,7 +661,11 @@ export async function typeTab(tabId: string, tabState: TabState, params: { ref?:
 		let locator: Locator;
 		if (ref) {
 			const resolved = await refToLocator(tabState.page, ref, tabState.refs);
-			if (!resolved) throw new Error(`Unknown ref: ${ref}`);
+			if (!resolved) {
+				const err = new Error(`Unknown ref: ${ref}. Call snapshot first.`);
+				(err as any).statusCode = 400;
+				throw err;
+			}
 			locator = resolved;
 		} else {
 			locator = tabState.page.locator(selector as string);
