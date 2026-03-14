@@ -52,6 +52,7 @@ startStatsBeacon(() => {
 	return { sessions, tabs, rssBytes: 0, heapUsedBytes: 0, uptimeSeconds: 0, browserConnected };
 });
 
+const HOST = CONFIG.host;
 const PORT = CONFIG.port;
 let server: Server;
 let healthProbeInterval: NodeJS.Timeout | null = null;
@@ -94,7 +95,7 @@ async function gracefulShutdown(signal: string): Promise<void> {
 process.on('SIGTERM', () => void gracefulShutdown('SIGTERM'));
 process.on('SIGINT', () => void gracefulShutdown('SIGINT'));
 
-server = app.listen(PORT, () => {
+server = app.listen(PORT, HOST, () => {
 	log('info', 'server started', { port: PORT, pid: process.pid, nodeVersion: process.version });
 	log('info', 'using persistent profiles', { profilesDir: CONFIG.profilesDir });
 	resetHealth();

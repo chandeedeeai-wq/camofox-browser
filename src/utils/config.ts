@@ -49,6 +49,7 @@ export interface ServerEnv {
 }
 
 export interface AppConfig {
+  host: string;
   port: number;
   nodeEnv: string;
   adminKey: string;
@@ -80,6 +81,7 @@ export interface AppConfig {
 }
 
 export interface ConfigEnv extends NodeJS.ProcessEnv {
+  CAMOFOX_HOST?: string;
   CAMOFOX_PORT?: string;
   PORT?: string;
   NODE_ENV?: string;
@@ -133,6 +135,9 @@ function parsePort(raw: string, source: string): number {
 }
 
 export function loadConfig(env: ConfigEnv = process.env): AppConfig {
+  const hostRaw = (env.CAMOFOX_HOST || '127.0.0.1').trim();
+  const host = hostRaw || '127.0.0.1';
+
   const portRaw = env.CAMOFOX_PORT || env.PORT || '9377';
   const port = parsePort(portRaw, env.CAMOFOX_PORT ? 'CAMOFOX_PORT' : env.PORT ? 'PORT' : 'default port');
 
@@ -182,6 +187,7 @@ export function loadConfig(env: ConfigEnv = process.env): AppConfig {
   const maxDownloadsPerUser = parsePositiveIntOrDefault(env.CAMOFOX_MAX_DOWNLOADS_PER_USER, 500);
 
   return {
+    host,
     port,
     nodeEnv: env.NODE_ENV || 'development',
     adminKey: env.CAMOFOX_ADMIN_KEY || '',
